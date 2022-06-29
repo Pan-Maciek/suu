@@ -1,69 +1,136 @@
-import { element, by, ElementFinder, ElementArrayFinder } from 'protractor';
+import { element, by, ElementFinder } from 'protractor';
 
-import { waitUntilAnyDisplayed, waitUntilDisplayed, click, waitUntilHidden, isVisible } from '../../../util/utils';
+export class OrderItemComponentsPage {
+  createButton = element(by.id('jh-create-entity'));
+  deleteButtons = element.all(by.css('jhi-order-item div table .btn-danger'));
+  title = element.all(by.css('jhi-order-item div h2#page-heading span')).first();
+  noResult = element(by.id('no-result'));
+  entities = element(by.id('entities'));
 
-import NavBarPage from './../../../page-objects/navbar-page';
-
-import OrderItemUpdatePage from './order-item-update.page-object';
-
-const expect = chai.expect;
-export class OrderItemDeleteDialog {
-  deleteModal = element(by.className('modal'));
-  private dialogTitle: ElementFinder = element(by.id('storeApp.productOrderItem.delete.question'));
-  private confirmButton = element(by.id('jhi-confirm-delete-orderItem'));
-
-  getDialogTitle() {
-    return this.dialogTitle;
+  async clickOnCreateButton(): Promise<void> {
+    await this.createButton.click();
   }
 
-  async clickOnConfirmButton() {
-    await this.confirmButton.click();
+  async clickOnLastDeleteButton(): Promise<void> {
+    await this.deleteButtons.last().click();
+  }
+
+  async countDeleteButtons(): Promise<number> {
+    return this.deleteButtons.count();
+  }
+
+  async getTitle(): Promise<string> {
+    return this.title.getAttribute('jhiTranslate');
   }
 }
 
-export default class OrderItemComponentsPage {
-  createButton: ElementFinder = element(by.id('jh-create-entity'));
-  deleteButtons = element.all(by.css('div table .btn-danger'));
-  title: ElementFinder = element(by.id('order-item-heading'));
-  noRecords: ElementFinder = element(by.css('#app-view-container .table-responsive div.alert.alert-warning'));
-  table: ElementFinder = element(by.css('#app-view-container div.table-responsive > table'));
+export class OrderItemUpdatePage {
+  pageTitle = element(by.id('jhi-order-item-heading'));
+  saveButton = element(by.id('save-entity'));
+  cancelButton = element(by.id('cancel-save'));
 
-  records: ElementArrayFinder = this.table.all(by.css('tbody tr'));
+  idInput = element(by.id('field_id'));
+  quantityInput = element(by.id('field_quantity'));
+  totalPriceInput = element(by.id('field_totalPrice'));
+  statusSelect = element(by.id('field_status'));
 
-  getDetailsButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-info.btn-sm'));
+  productSelect = element(by.id('field_product'));
+  orderSelect = element(by.id('field_order'));
+
+  async getPageTitle(): Promise<string> {
+    return this.pageTitle.getAttribute('jhiTranslate');
   }
 
-  getEditButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-primary.btn-sm'));
+  async setIdInput(id: string): Promise<void> {
+    await this.idInput.sendKeys(id);
   }
 
-  getDeleteButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-danger.btn-sm'));
+  async getIdInput(): Promise<string> {
+    return await this.idInput.getAttribute('value');
   }
 
-  async goToPage(navBarPage: NavBarPage) {
-    await navBarPage.getEntityPage('order-item');
-    await waitUntilAnyDisplayed([this.noRecords, this.table]);
-    return this;
+  async setQuantityInput(quantity: string): Promise<void> {
+    await this.quantityInput.sendKeys(quantity);
   }
 
-  async goToCreateOrderItem() {
-    await this.createButton.click();
-    return new OrderItemUpdatePage();
+  async getQuantityInput(): Promise<string> {
+    return await this.quantityInput.getAttribute('value');
   }
 
-  async deleteOrderItem() {
-    const deleteButton = this.getDeleteButton(this.records.last());
-    await click(deleteButton);
+  async setTotalPriceInput(totalPrice: string): Promise<void> {
+    await this.totalPriceInput.sendKeys(totalPrice);
+  }
 
-    const orderItemDeleteDialog = new OrderItemDeleteDialog();
-    await waitUntilDisplayed(orderItemDeleteDialog.deleteModal);
-    expect(await orderItemDeleteDialog.getDialogTitle().getAttribute('id')).to.match(/storeApp.productOrderItem.delete.question/);
-    await orderItemDeleteDialog.clickOnConfirmButton();
+  async getTotalPriceInput(): Promise<string> {
+    return await this.totalPriceInput.getAttribute('value');
+  }
 
-    await waitUntilHidden(orderItemDeleteDialog.deleteModal);
+  async setStatusSelect(status: string): Promise<void> {
+    await this.statusSelect.sendKeys(status);
+  }
 
-    expect(await isVisible(orderItemDeleteDialog.deleteModal)).to.be.false;
+  async getStatusSelect(): Promise<string> {
+    return await this.statusSelect.element(by.css('option:checked')).getText();
+  }
+
+  async statusSelectLastOption(): Promise<void> {
+    await this.statusSelect.all(by.tagName('option')).last().click();
+  }
+
+  async productSelectLastOption(): Promise<void> {
+    await this.productSelect.all(by.tagName('option')).last().click();
+  }
+
+  async productSelectOption(option: string): Promise<void> {
+    await this.productSelect.sendKeys(option);
+  }
+
+  getProductSelect(): ElementFinder {
+    return this.productSelect;
+  }
+
+  async getProductSelectedOption(): Promise<string> {
+    return await this.productSelect.element(by.css('option:checked')).getText();
+  }
+
+  async orderSelectLastOption(): Promise<void> {
+    await this.orderSelect.all(by.tagName('option')).last().click();
+  }
+
+  async orderSelectOption(option: string): Promise<void> {
+    await this.orderSelect.sendKeys(option);
+  }
+
+  getOrderSelect(): ElementFinder {
+    return this.orderSelect;
+  }
+
+  async getOrderSelectedOption(): Promise<string> {
+    return await this.orderSelect.element(by.css('option:checked')).getText();
+  }
+
+  async save(): Promise<void> {
+    await this.saveButton.click();
+  }
+
+  async cancel(): Promise<void> {
+    await this.cancelButton.click();
+  }
+
+  getSaveButton(): ElementFinder {
+    return this.saveButton;
+  }
+}
+
+export class OrderItemDeleteDialog {
+  private dialogTitle = element(by.id('jhi-delete-orderItem-heading'));
+  private confirmButton = element(by.id('jhi-confirm-delete-orderItem'));
+
+  async getDialogTitle(): Promise<string> {
+    return this.dialogTitle.getAttribute('jhiTranslate');
+  }
+
+  async clickOnConfirmButton(): Promise<void> {
+    await this.confirmButton.click();
   }
 }

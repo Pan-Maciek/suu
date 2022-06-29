@@ -1,71 +1,88 @@
-import { element, by, ElementFinder, ElementArrayFinder } from 'protractor';
+import { element, by, ElementFinder } from 'protractor';
 
-import { waitUntilAnyDisplayed, waitUntilDisplayed, click, waitUntilHidden, isVisible } from '../../../util/utils';
+export class ProductCategoryComponentsPage {
+  createButton = element(by.id('jh-create-entity'));
+  deleteButtons = element.all(by.css('jhi-product-category div table .btn-danger'));
+  title = element.all(by.css('jhi-product-category div h2#page-heading span')).first();
+  noResult = element(by.id('no-result'));
+  entities = element(by.id('entities'));
 
-import NavBarPage from './../../../page-objects/navbar-page';
-
-import ProductCategoryUpdatePage from './product-category-update.page-object';
-
-const expect = chai.expect;
-export class ProductCategoryDeleteDialog {
-  deleteModal = element(by.className('modal'));
-  private dialogTitle: ElementFinder = element(by.id('storeApp.productProductCategory.delete.question'));
-  private confirmButton = element(by.id('jhi-confirm-delete-productCategory'));
-
-  getDialogTitle() {
-    return this.dialogTitle;
+  async clickOnCreateButton(): Promise<void> {
+    await this.createButton.click();
   }
 
-  async clickOnConfirmButton() {
-    await this.confirmButton.click();
+  async clickOnLastDeleteButton(): Promise<void> {
+    await this.deleteButtons.last().click();
+  }
+
+  async countDeleteButtons(): Promise<number> {
+    return this.deleteButtons.count();
+  }
+
+  async getTitle(): Promise<string> {
+    return this.title.getAttribute('jhiTranslate');
   }
 }
 
-export default class ProductCategoryComponentsPage {
-  createButton: ElementFinder = element(by.id('jh-create-entity'));
-  deleteButtons = element.all(by.css('div table .btn-danger'));
-  title: ElementFinder = element(by.id('product-category-heading'));
-  noRecords: ElementFinder = element(by.css('#app-view-container .table-responsive div.alert.alert-warning'));
-  table: ElementFinder = element(by.css('#app-view-container div.table-responsive > table'));
+export class ProductCategoryUpdatePage {
+  pageTitle = element(by.id('jhi-product-category-heading'));
+  saveButton = element(by.id('save-entity'));
+  cancelButton = element(by.id('cancel-save'));
 
-  records: ElementArrayFinder = this.table.all(by.css('tbody tr'));
+  idInput = element(by.id('field_id'));
+  nameInput = element(by.id('field_name'));
+  descriptionInput = element(by.id('field_description'));
 
-  getDetailsButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-info.btn-sm'));
+  async getPageTitle(): Promise<string> {
+    return this.pageTitle.getAttribute('jhiTranslate');
   }
 
-  getEditButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-primary.btn-sm'));
+  async setIdInput(id: string): Promise<void> {
+    await this.idInput.sendKeys(id);
   }
 
-  getDeleteButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-danger.btn-sm'));
+  async getIdInput(): Promise<string> {
+    return await this.idInput.getAttribute('value');
   }
 
-  async goToPage(navBarPage: NavBarPage) {
-    await navBarPage.getEntityPage('product-category');
-    await waitUntilAnyDisplayed([this.noRecords, this.table]);
-    return this;
+  async setNameInput(name: string): Promise<void> {
+    await this.nameInput.sendKeys(name);
   }
 
-  async goToCreateProductCategory() {
-    await this.createButton.click();
-    return new ProductCategoryUpdatePage();
+  async getNameInput(): Promise<string> {
+    return await this.nameInput.getAttribute('value');
   }
 
-  async deleteProductCategory() {
-    const deleteButton = this.getDeleteButton(this.records.last());
-    await click(deleteButton);
+  async setDescriptionInput(description: string): Promise<void> {
+    await this.descriptionInput.sendKeys(description);
+  }
 
-    const productCategoryDeleteDialog = new ProductCategoryDeleteDialog();
-    await waitUntilDisplayed(productCategoryDeleteDialog.deleteModal);
-    expect(await productCategoryDeleteDialog.getDialogTitle().getAttribute('id')).to.match(
-      /storeApp.productProductCategory.delete.question/
-    );
-    await productCategoryDeleteDialog.clickOnConfirmButton();
+  async getDescriptionInput(): Promise<string> {
+    return await this.descriptionInput.getAttribute('value');
+  }
 
-    await waitUntilHidden(productCategoryDeleteDialog.deleteModal);
+  async save(): Promise<void> {
+    await this.saveButton.click();
+  }
 
-    expect(await isVisible(productCategoryDeleteDialog.deleteModal)).to.be.false;
+  async cancel(): Promise<void> {
+    await this.cancelButton.click();
+  }
+
+  getSaveButton(): ElementFinder {
+    return this.saveButton;
+  }
+}
+
+export class ProductCategoryDeleteDialog {
+  private dialogTitle = element(by.id('jhi-delete-productCategory-heading'));
+  private confirmButton = element(by.id('jhi-confirm-delete-productCategory'));
+
+  async getDialogTitle(): Promise<string> {
+    return this.dialogTitle.getAttribute('jhiTranslate');
+  }
+
+  async clickOnConfirmButton(): Promise<void> {
+    await this.confirmButton.click();
   }
 }

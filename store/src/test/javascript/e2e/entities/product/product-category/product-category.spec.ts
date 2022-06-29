@@ -1,18 +1,7 @@
-import { browser, element, by } from 'protractor';
+import { browser, ExpectedConditions as ec, promise } from 'protractor';
+import { NavBarPage, SignInPage } from '../../../page-objects/jhi-page-objects';
 
-import NavBarPage from './../../../page-objects/navbar-page';
-import SignInPage from './../../../page-objects/signin-page';
-import ProductCategoryComponentsPage from './product-category.page-object';
-import ProductCategoryUpdatePage from './product-category-update.page-object';
-import {
-  waitUntilDisplayed,
-  waitUntilAnyDisplayed,
-  click,
-  getRecordsCount,
-  waitUntilHidden,
-  waitUntilCount,
-  isVisible,
-} from '../../../util/utils';
+import { ProductCategoryComponentsPage, ProductCategoryDeleteDialog, ProductCategoryUpdatePage } from './product-category.page-object';
 
 const expect = chai.expect;
 
@@ -21,6 +10,7 @@ describe('ProductCategory e2e test', () => {
   let signInPage: SignInPage;
   let productCategoryComponentsPage: ProductCategoryComponentsPage;
   let productCategoryUpdatePage: ProductCategoryUpdatePage;
+  let productCategoryDeleteDialog: ProductCategoryDeleteDialog;
   const username = process.env.E2E_USERNAME ?? 'admin';
   const password = process.env.E2E_PASSWORD ?? 'admin';
 
@@ -28,48 +18,54 @@ describe('ProductCategory e2e test', () => {
     await browser.get('/');
     navBarPage = new NavBarPage();
     signInPage = await navBarPage.getSignInPage();
-    await signInPage.waitUntilDisplayed();
-    await signInPage.username.sendKeys(username);
-    await signInPage.password.sendKeys(password);
-    await signInPage.loginButton.click();
-    await signInPage.waitUntilHidden();
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    await waitUntilDisplayed(navBarPage.adminMenu);
-    await waitUntilDisplayed(navBarPage.accountMenu);
-  });
-
-  beforeEach(async () => {
-    await browser.get('/');
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    productCategoryComponentsPage = new ProductCategoryComponentsPage();
-    productCategoryComponentsPage = await productCategoryComponentsPage.goToPage(navBarPage);
+    await signInPage.autoSignInUsing(username, password);
+    await browser.wait(ec.visibilityOf(navBarPage.entityMenu), 5000);
   });
 
   it('should load ProductCategories', async () => {
-    expect(await productCategoryComponentsPage.title.getText()).to.match(/Product Categories/);
-    expect(await productCategoryComponentsPage.createButton.isEnabled()).to.be.true;
+    await navBarPage.goToEntity('product-category');
+    productCategoryComponentsPage = new ProductCategoryComponentsPage();
+    await browser.wait(ec.visibilityOf(productCategoryComponentsPage.title), 5000);
+    expect(await productCategoryComponentsPage.getTitle()).to.eq('storeApp.productProductCategory.home.title');
+    await browser.wait(
+      ec.or(ec.visibilityOf(productCategoryComponentsPage.entities), ec.visibilityOf(productCategoryComponentsPage.noResult)),
+      1000
+    );
   });
 
-  it('should create and delete ProductCategories', async () => {
-    const beforeRecordsCount = (await isVisible(productCategoryComponentsPage.noRecords))
-      ? 0
-      : await getRecordsCount(productCategoryComponentsPage.table);
-    productCategoryUpdatePage = await productCategoryComponentsPage.goToCreateProductCategory();
-    await productCategoryUpdatePage.enterData();
-    expect(await isVisible(productCategoryUpdatePage.saveButton)).to.be.false;
+  it('should load create ProductCategory page', async () => {
+    await productCategoryComponentsPage.clickOnCreateButton();
+    productCategoryUpdatePage = new ProductCategoryUpdatePage();
+    expect(await productCategoryUpdatePage.getPageTitle()).to.eq('storeApp.productProductCategory.home.createOrEditLabel');
+    await productCategoryUpdatePage.cancel();
+  });
 
-    expect(await productCategoryComponentsPage.createButton.isEnabled()).to.be.true;
-    await waitUntilDisplayed(productCategoryComponentsPage.table);
-    await waitUntilCount(productCategoryComponentsPage.records, beforeRecordsCount + 1);
-    expect(await productCategoryComponentsPage.records.count()).to.eq(beforeRecordsCount + 1);
+  it('should create and save ProductCategories', async () => {
+    const nbButtonsBeforeCreate = await productCategoryComponentsPage.countDeleteButtons();
 
-    await productCategoryComponentsPage.deleteProductCategory();
-    if (beforeRecordsCount !== 0) {
-      await waitUntilCount(productCategoryComponentsPage.records, beforeRecordsCount);
-      expect(await productCategoryComponentsPage.records.count()).to.eq(beforeRecordsCount);
-    } else {
-      await waitUntilDisplayed(productCategoryComponentsPage.noRecords);
-    }
+    await productCategoryComponentsPage.clickOnCreateButton();
+
+    await promise.all([productCategoryUpdatePage.setNameInput('name'), productCategoryUpdatePage.setDescriptionInput('description')]);
+
+    await productCategoryUpdatePage.save();
+    expect(await productCategoryUpdatePage.getSaveButton().isPresent(), 'Expected save button disappear').to.be.false;
+
+    expect(await productCategoryComponentsPage.countDeleteButtons()).to.eq(
+      nbButtonsBeforeCreate + 1,
+      'Expected one more entry in the table'
+    );
+  });
+
+  it('should delete last ProductCategory', async () => {
+    const nbButtonsBeforeDelete = await productCategoryComponentsPage.countDeleteButtons();
+    await productCategoryComponentsPage.clickOnLastDeleteButton();
+
+    productCategoryDeleteDialog = new ProductCategoryDeleteDialog();
+    expect(await productCategoryDeleteDialog.getDialogTitle()).to.eq('storeApp.productProductCategory.delete.question');
+    await productCategoryDeleteDialog.clickOnConfirmButton();
+    await browser.wait(ec.visibilityOf(productCategoryComponentsPage.title), 5000);
+
+    expect(await productCategoryComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
   });
 
   after(async () => {

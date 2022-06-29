@@ -1,71 +1,128 @@
-import { element, by, ElementFinder, ElementArrayFinder } from 'protractor';
+import { element, by, ElementFinder } from 'protractor';
 
-import { waitUntilAnyDisplayed, waitUntilDisplayed, click, waitUntilHidden, isVisible } from '../../../util/utils';
+export class NotificationComponentsPage {
+  createButton = element(by.id('jh-create-entity'));
+  deleteButtons = element.all(by.css('jhi-notification div table .btn-danger'));
+  title = element.all(by.css('jhi-notification div h2#page-heading span')).first();
+  noResult = element(by.id('no-result'));
+  entities = element(by.id('entities'));
 
-import NavBarPage from './../../../page-objects/navbar-page';
-
-import NotificationUpdatePage from './notification-update.page-object';
-
-const expect = chai.expect;
-export class NotificationDeleteDialog {
-  deleteModal = element(by.className('modal'));
-  private dialogTitle: ElementFinder = element(by.id('storeApp.notificationNotification.delete.question'));
-  private confirmButton = element(by.id('jhi-confirm-delete-notification'));
-
-  getDialogTitle() {
-    return this.dialogTitle;
+  async clickOnCreateButton(): Promise<void> {
+    await this.createButton.click();
   }
 
-  async clickOnConfirmButton() {
-    await this.confirmButton.click();
+  async clickOnLastDeleteButton(): Promise<void> {
+    await this.deleteButtons.last().click();
+  }
+
+  async countDeleteButtons(): Promise<number> {
+    return this.deleteButtons.count();
+  }
+
+  async getTitle(): Promise<string> {
+    return this.title.getAttribute('jhiTranslate');
   }
 }
 
-export default class NotificationComponentsPage {
-  createButton: ElementFinder = element(by.id('jh-create-entity'));
-  deleteButtons = element.all(by.css('div table .btn-danger'));
-  title: ElementFinder = element(by.id('notification-heading'));
-  noRecords: ElementFinder = element(by.css('#app-view-container .table-responsive div.alert.alert-warning'));
-  table: ElementFinder = element(by.css('#app-view-container div.table-responsive > table'));
+export class NotificationUpdatePage {
+  pageTitle = element(by.id('jhi-notification-heading'));
+  saveButton = element(by.id('save-entity'));
+  cancelButton = element(by.id('cancel-save'));
 
-  records: ElementArrayFinder = this.table.all(by.css('tbody tr'));
+  idInput = element(by.id('field_id'));
+  dateInput = element(by.id('field_date'));
+  detailsInput = element(by.id('field_details'));
+  sentDateInput = element(by.id('field_sentDate'));
+  formatSelect = element(by.id('field_format'));
+  userIdInput = element(by.id('field_userId'));
+  productIdInput = element(by.id('field_productId'));
 
-  getDetailsButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-info.btn-sm'));
+  async getPageTitle(): Promise<string> {
+    return this.pageTitle.getAttribute('jhiTranslate');
   }
 
-  getEditButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-primary.btn-sm'));
+  async setIdInput(id: string): Promise<void> {
+    await this.idInput.sendKeys(id);
   }
 
-  getDeleteButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-danger.btn-sm'));
+  async getIdInput(): Promise<string> {
+    return await this.idInput.getAttribute('value');
   }
 
-  async goToPage(navBarPage: NavBarPage) {
-    await navBarPage.getEntityPage('notification');
-    await waitUntilAnyDisplayed([this.noRecords, this.table]);
-    return this;
+  async setDateInput(date: string): Promise<void> {
+    await this.dateInput.sendKeys(date);
   }
 
-  async goToCreateNotification() {
-    await this.createButton.click();
-    return new NotificationUpdatePage();
+  async getDateInput(): Promise<string> {
+    return await this.dateInput.getAttribute('value');
   }
 
-  async deleteNotification() {
-    const deleteButton = this.getDeleteButton(this.records.last());
-    await click(deleteButton);
+  async setDetailsInput(details: string): Promise<void> {
+    await this.detailsInput.sendKeys(details);
+  }
 
-    const notificationDeleteDialog = new NotificationDeleteDialog();
-    await waitUntilDisplayed(notificationDeleteDialog.deleteModal);
-    expect(await notificationDeleteDialog.getDialogTitle().getAttribute('id')).to.match(
-      /storeApp.notificationNotification.delete.question/
-    );
-    await notificationDeleteDialog.clickOnConfirmButton();
+  async getDetailsInput(): Promise<string> {
+    return await this.detailsInput.getAttribute('value');
+  }
 
-    await waitUntilHidden(notificationDeleteDialog.deleteModal);
+  async setSentDateInput(sentDate: string): Promise<void> {
+    await this.sentDateInput.sendKeys(sentDate);
+  }
 
-    expect(await isVisible(notificationDeleteDialog.deleteModal)).to.be.false;
+  async getSentDateInput(): Promise<string> {
+    return await this.sentDateInput.getAttribute('value');
+  }
+
+  async setFormatSelect(format: string): Promise<void> {
+    await this.formatSelect.sendKeys(format);
+  }
+
+  async getFormatSelect(): Promise<string> {
+    return await this.formatSelect.element(by.css('option:checked')).getText();
+  }
+
+  async formatSelectLastOption(): Promise<void> {
+    await this.formatSelect.all(by.tagName('option')).last().click();
+  }
+
+  async setUserIdInput(userId: string): Promise<void> {
+    await this.userIdInput.sendKeys(userId);
+  }
+
+  async getUserIdInput(): Promise<string> {
+    return await this.userIdInput.getAttribute('value');
+  }
+
+  async setProductIdInput(productId: string): Promise<void> {
+    await this.productIdInput.sendKeys(productId);
+  }
+
+  async getProductIdInput(): Promise<string> {
+    return await this.productIdInput.getAttribute('value');
+  }
+
+  async save(): Promise<void> {
+    await this.saveButton.click();
+  }
+
+  async cancel(): Promise<void> {
+    await this.cancelButton.click();
+  }
+
+  getSaveButton(): ElementFinder {
+    return this.saveButton;
+  }
+}
+
+export class NotificationDeleteDialog {
+  private dialogTitle = element(by.id('jhi-delete-notification-heading'));
+  private confirmButton = element(by.id('jhi-confirm-delete-notification'));
+
+  async getDialogTitle(): Promise<string> {
+    return this.dialogTitle.getAttribute('jhiTranslate');
+  }
+
+  async clickOnConfirmButton(): Promise<void> {
+    await this.confirmButton.click();
   }
 }

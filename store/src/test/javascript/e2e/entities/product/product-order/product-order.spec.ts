@@ -1,18 +1,7 @@
-import { browser, element, by } from 'protractor';
+import { browser, ExpectedConditions as ec, protractor, promise } from 'protractor';
+import { NavBarPage, SignInPage } from '../../../page-objects/jhi-page-objects';
 
-import NavBarPage from './../../../page-objects/navbar-page';
-import SignInPage from './../../../page-objects/signin-page';
-import ProductOrderComponentsPage from './product-order.page-object';
-import ProductOrderUpdatePage from './product-order-update.page-object';
-import {
-  waitUntilDisplayed,
-  waitUntilAnyDisplayed,
-  click,
-  getRecordsCount,
-  waitUntilHidden,
-  waitUntilCount,
-  isVisible,
-} from '../../../util/utils';
+import { ProductOrderComponentsPage, ProductOrderDeleteDialog, ProductOrderUpdatePage } from './product-order.page-object';
 
 const expect = chai.expect;
 
@@ -21,6 +10,7 @@ describe('ProductOrder e2e test', () => {
   let signInPage: SignInPage;
   let productOrderComponentsPage: ProductOrderComponentsPage;
   let productOrderUpdatePage: ProductOrderUpdatePage;
+  let productOrderDeleteDialog: ProductOrderDeleteDialog;
   const username = process.env.E2E_USERNAME ?? 'admin';
   const password = process.env.E2E_PASSWORD ?? 'admin';
 
@@ -28,48 +18,57 @@ describe('ProductOrder e2e test', () => {
     await browser.get('/');
     navBarPage = new NavBarPage();
     signInPage = await navBarPage.getSignInPage();
-    await signInPage.waitUntilDisplayed();
-    await signInPage.username.sendKeys(username);
-    await signInPage.password.sendKeys(password);
-    await signInPage.loginButton.click();
-    await signInPage.waitUntilHidden();
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    await waitUntilDisplayed(navBarPage.adminMenu);
-    await waitUntilDisplayed(navBarPage.accountMenu);
-  });
-
-  beforeEach(async () => {
-    await browser.get('/');
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    productOrderComponentsPage = new ProductOrderComponentsPage();
-    productOrderComponentsPage = await productOrderComponentsPage.goToPage(navBarPage);
+    await signInPage.autoSignInUsing(username, password);
+    await browser.wait(ec.visibilityOf(navBarPage.entityMenu), 5000);
   });
 
   it('should load ProductOrders', async () => {
-    expect(await productOrderComponentsPage.title.getText()).to.match(/Product Orders/);
-    expect(await productOrderComponentsPage.createButton.isEnabled()).to.be.true;
+    await navBarPage.goToEntity('product-order');
+    productOrderComponentsPage = new ProductOrderComponentsPage();
+    await browser.wait(ec.visibilityOf(productOrderComponentsPage.title), 5000);
+    expect(await productOrderComponentsPage.getTitle()).to.eq('storeApp.productProductOrder.home.title');
+    await browser.wait(
+      ec.or(ec.visibilityOf(productOrderComponentsPage.entities), ec.visibilityOf(productOrderComponentsPage.noResult)),
+      1000
+    );
   });
 
-  it('should create and delete ProductOrders', async () => {
-    const beforeRecordsCount = (await isVisible(productOrderComponentsPage.noRecords))
-      ? 0
-      : await getRecordsCount(productOrderComponentsPage.table);
-    productOrderUpdatePage = await productOrderComponentsPage.goToCreateProductOrder();
-    await productOrderUpdatePage.enterData();
-    expect(await isVisible(productOrderUpdatePage.saveButton)).to.be.false;
+  it('should load create ProductOrder page', async () => {
+    await productOrderComponentsPage.clickOnCreateButton();
+    productOrderUpdatePage = new ProductOrderUpdatePage();
+    expect(await productOrderUpdatePage.getPageTitle()).to.eq('storeApp.productProductOrder.home.createOrEditLabel');
+    await productOrderUpdatePage.cancel();
+  });
 
-    expect(await productOrderComponentsPage.createButton.isEnabled()).to.be.true;
-    await waitUntilDisplayed(productOrderComponentsPage.table);
-    await waitUntilCount(productOrderComponentsPage.records, beforeRecordsCount + 1);
-    expect(await productOrderComponentsPage.records.count()).to.eq(beforeRecordsCount + 1);
+  it('should create and save ProductOrders', async () => {
+    const nbButtonsBeforeCreate = await productOrderComponentsPage.countDeleteButtons();
 
-    await productOrderComponentsPage.deleteProductOrder();
-    if (beforeRecordsCount !== 0) {
-      await waitUntilCount(productOrderComponentsPage.records, beforeRecordsCount);
-      expect(await productOrderComponentsPage.records.count()).to.eq(beforeRecordsCount);
-    } else {
-      await waitUntilDisplayed(productOrderComponentsPage.noRecords);
-    }
+    await productOrderComponentsPage.clickOnCreateButton();
+
+    await promise.all([
+      productOrderUpdatePage.setPlacedDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM'),
+      productOrderUpdatePage.statusSelectLastOption(),
+      productOrderUpdatePage.setCodeInput('code'),
+      productOrderUpdatePage.setInvoiceIdInput('5'),
+      productOrderUpdatePage.setCustomerInput('customer'),
+    ]);
+
+    await productOrderUpdatePage.save();
+    expect(await productOrderUpdatePage.getSaveButton().isPresent(), 'Expected save button disappear').to.be.false;
+
+    expect(await productOrderComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1, 'Expected one more entry in the table');
+  });
+
+  it('should delete last ProductOrder', async () => {
+    const nbButtonsBeforeDelete = await productOrderComponentsPage.countDeleteButtons();
+    await productOrderComponentsPage.clickOnLastDeleteButton();
+
+    productOrderDeleteDialog = new ProductOrderDeleteDialog();
+    expect(await productOrderDeleteDialog.getDialogTitle()).to.eq('storeApp.productProductOrder.delete.question');
+    await productOrderDeleteDialog.clickOnConfirmButton();
+    await browser.wait(ec.visibilityOf(productOrderComponentsPage.title), 5000);
+
+    expect(await productOrderComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
   });
 
   after(async () => {

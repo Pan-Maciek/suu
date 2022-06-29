@@ -1,18 +1,11 @@
-import { browser, element, by } from 'protractor';
+import { browser, ExpectedConditions as ec /* , promise */ } from 'protractor';
+import { NavBarPage, SignInPage } from '../../page-objects/jhi-page-objects';
 
-import NavBarPage from './../../page-objects/navbar-page';
-import SignInPage from './../../page-objects/signin-page';
-import CustomerComponentsPage from './customer.page-object';
-import CustomerUpdatePage from './customer-update.page-object';
 import {
-  waitUntilDisplayed,
-  waitUntilAnyDisplayed,
-  click,
-  getRecordsCount,
-  waitUntilHidden,
-  waitUntilCount,
-  isVisible,
-} from '../../util/utils';
+  CustomerComponentsPage,
+  /* CustomerDeleteDialog, */
+  CustomerUpdatePage,
+} from './customer.page-object';
 
 const expect = chai.expect;
 
@@ -21,6 +14,7 @@ describe('Customer e2e test', () => {
   let signInPage: SignInPage;
   let customerComponentsPage: CustomerComponentsPage;
   let customerUpdatePage: CustomerUpdatePage;
+  /* let customerDeleteDialog: CustomerDeleteDialog; */
   const username = process.env.E2E_USERNAME ?? 'admin';
   const password = process.env.E2E_PASSWORD ?? 'admin';
 
@@ -28,46 +22,60 @@ describe('Customer e2e test', () => {
     await browser.get('/');
     navBarPage = new NavBarPage();
     signInPage = await navBarPage.getSignInPage();
-    await signInPage.waitUntilDisplayed();
-    await signInPage.username.sendKeys(username);
-    await signInPage.password.sendKeys(password);
-    await signInPage.loginButton.click();
-    await signInPage.waitUntilHidden();
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    await waitUntilDisplayed(navBarPage.adminMenu);
-    await waitUntilDisplayed(navBarPage.accountMenu);
-  });
-
-  beforeEach(async () => {
-    await browser.get('/');
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    customerComponentsPage = new CustomerComponentsPage();
-    customerComponentsPage = await customerComponentsPage.goToPage(navBarPage);
+    await signInPage.autoSignInUsing(username, password);
+    await browser.wait(ec.visibilityOf(navBarPage.entityMenu), 5000);
   });
 
   it('should load Customers', async () => {
-    expect(await customerComponentsPage.title.getText()).to.match(/Customers/);
-    expect(await customerComponentsPage.createButton.isEnabled()).to.be.true;
+    await navBarPage.goToEntity('customer');
+    customerComponentsPage = new CustomerComponentsPage();
+    await browser.wait(ec.visibilityOf(customerComponentsPage.title), 5000);
+    expect(await customerComponentsPage.getTitle()).to.eq('storeApp.customer.home.title');
+    await browser.wait(ec.or(ec.visibilityOf(customerComponentsPage.entities), ec.visibilityOf(customerComponentsPage.noResult)), 1000);
   });
 
-  /* it('should create and delete Customers', async () => {
-        const beforeRecordsCount = await isVisible(customerComponentsPage.noRecords) ? 0 : await getRecordsCount(customerComponentsPage.table);
-        customerUpdatePage = await customerComponentsPage.goToCreateCustomer();
-        await customerUpdatePage.enterData();
-        expect(await isVisible(customerUpdatePage.saveButton)).to.be.false;
+  it('should load create Customer page', async () => {
+    await customerComponentsPage.clickOnCreateButton();
+    customerUpdatePage = new CustomerUpdatePage();
+    expect(await customerUpdatePage.getPageTitle()).to.eq('storeApp.customer.home.createOrEditLabel');
+    await customerUpdatePage.cancel();
+  });
 
-        expect(await customerComponentsPage.createButton.isEnabled()).to.be.true;
-        await waitUntilDisplayed(customerComponentsPage.table);
-        await waitUntilCount(customerComponentsPage.records, beforeRecordsCount + 1);
-        expect(await customerComponentsPage.records.count()).to.eq(beforeRecordsCount + 1);
+  /* it('should create and save Customers', async () => {
+        const nbButtonsBeforeCreate = await customerComponentsPage.countDeleteButtons();
 
-        await customerComponentsPage.deleteCustomer();
-        if(beforeRecordsCount !== 0) {
-          await waitUntilCount(customerComponentsPage.records, beforeRecordsCount);
-          expect(await customerComponentsPage.records.count()).to.eq(beforeRecordsCount);
-        } else {
-          await waitUntilDisplayed(customerComponentsPage.noRecords);
-        }
+        await customerComponentsPage.clickOnCreateButton();
+
+        await promise.all([
+            customerUpdatePage.setFirstNameInput('firstName'),
+            customerUpdatePage.setLastNameInput('lastName'),
+            customerUpdatePage.genderSelectLastOption(),
+            customerUpdatePage.setEmailInput('email'),
+            customerUpdatePage.setPhoneInput('phone'),
+            customerUpdatePage.setAddressLine1Input('addressLine1'),
+            customerUpdatePage.setAddressLine2Input('addressLine2'),
+            customerUpdatePage.setCityInput('city'),
+            customerUpdatePage.setCountryInput('country'),
+            customerUpdatePage.userSelectLastOption(),
+        ]);
+
+        await customerUpdatePage.save();
+        expect(await customerUpdatePage.getSaveButton().isPresent(), 'Expected save button disappear').to.be.false;
+
+        expect(await customerComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1, 'Expected one more entry in the table');
+    }); */
+
+  /* it('should delete last Customer', async () => {
+        const nbButtonsBeforeDelete = await customerComponentsPage.countDeleteButtons();
+        await customerComponentsPage.clickOnLastDeleteButton();
+
+        customerDeleteDialog = new CustomerDeleteDialog();
+        expect(await customerDeleteDialog.getDialogTitle())
+            .to.eq('storeApp.customer.delete.question');
+        await customerDeleteDialog.clickOnConfirmButton();
+        await browser.wait(ec.visibilityOf(customerComponentsPage.title), 5000);
+
+        expect(await customerComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
     }); */
 
   after(async () => {

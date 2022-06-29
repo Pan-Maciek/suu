@@ -1,18 +1,11 @@
-import { browser, element, by } from 'protractor';
+import { browser, ExpectedConditions as ec /* , protractor, promise */ } from 'protractor';
+import { NavBarPage, SignInPage } from '../../../page-objects/jhi-page-objects';
 
-import NavBarPage from './../../../page-objects/navbar-page';
-import SignInPage from './../../../page-objects/signin-page';
-import ShipmentComponentsPage from './shipment.page-object';
-import ShipmentUpdatePage from './shipment-update.page-object';
 import {
-  waitUntilDisplayed,
-  waitUntilAnyDisplayed,
-  click,
-  getRecordsCount,
-  waitUntilHidden,
-  waitUntilCount,
-  isVisible,
-} from '../../../util/utils';
+  ShipmentComponentsPage,
+  /* ShipmentDeleteDialog, */
+  ShipmentUpdatePage,
+} from './shipment.page-object';
 
 const expect = chai.expect;
 
@@ -21,6 +14,7 @@ describe('Shipment e2e test', () => {
   let signInPage: SignInPage;
   let shipmentComponentsPage: ShipmentComponentsPage;
   let shipmentUpdatePage: ShipmentUpdatePage;
+  /* let shipmentDeleteDialog: ShipmentDeleteDialog; */
   const username = process.env.E2E_USERNAME ?? 'admin';
   const password = process.env.E2E_PASSWORD ?? 'admin';
 
@@ -28,46 +22,54 @@ describe('Shipment e2e test', () => {
     await browser.get('/');
     navBarPage = new NavBarPage();
     signInPage = await navBarPage.getSignInPage();
-    await signInPage.waitUntilDisplayed();
-    await signInPage.username.sendKeys(username);
-    await signInPage.password.sendKeys(password);
-    await signInPage.loginButton.click();
-    await signInPage.waitUntilHidden();
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    await waitUntilDisplayed(navBarPage.adminMenu);
-    await waitUntilDisplayed(navBarPage.accountMenu);
-  });
-
-  beforeEach(async () => {
-    await browser.get('/');
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    shipmentComponentsPage = new ShipmentComponentsPage();
-    shipmentComponentsPage = await shipmentComponentsPage.goToPage(navBarPage);
+    await signInPage.autoSignInUsing(username, password);
+    await browser.wait(ec.visibilityOf(navBarPage.entityMenu), 5000);
   });
 
   it('should load Shipments', async () => {
-    expect(await shipmentComponentsPage.title.getText()).to.match(/Shipments/);
-    expect(await shipmentComponentsPage.createButton.isEnabled()).to.be.true;
+    await navBarPage.goToEntity('shipment');
+    shipmentComponentsPage = new ShipmentComponentsPage();
+    await browser.wait(ec.visibilityOf(shipmentComponentsPage.title), 5000);
+    expect(await shipmentComponentsPage.getTitle()).to.eq('storeApp.invoiceShipment.home.title');
+    await browser.wait(ec.or(ec.visibilityOf(shipmentComponentsPage.entities), ec.visibilityOf(shipmentComponentsPage.noResult)), 1000);
   });
 
-  /* it('should create and delete Shipments', async () => {
-        const beforeRecordsCount = await isVisible(shipmentComponentsPage.noRecords) ? 0 : await getRecordsCount(shipmentComponentsPage.table);
-        shipmentUpdatePage = await shipmentComponentsPage.goToCreateShipment();
-        await shipmentUpdatePage.enterData();
-        expect(await isVisible(shipmentUpdatePage.saveButton)).to.be.false;
+  it('should load create Shipment page', async () => {
+    await shipmentComponentsPage.clickOnCreateButton();
+    shipmentUpdatePage = new ShipmentUpdatePage();
+    expect(await shipmentUpdatePage.getPageTitle()).to.eq('storeApp.invoiceShipment.home.createOrEditLabel');
+    await shipmentUpdatePage.cancel();
+  });
 
-        expect(await shipmentComponentsPage.createButton.isEnabled()).to.be.true;
-        await waitUntilDisplayed(shipmentComponentsPage.table);
-        await waitUntilCount(shipmentComponentsPage.records, beforeRecordsCount + 1);
-        expect(await shipmentComponentsPage.records.count()).to.eq(beforeRecordsCount + 1);
+  /* it('should create and save Shipments', async () => {
+        const nbButtonsBeforeCreate = await shipmentComponentsPage.countDeleteButtons();
 
-        await shipmentComponentsPage.deleteShipment();
-        if(beforeRecordsCount !== 0) {
-          await waitUntilCount(shipmentComponentsPage.records, beforeRecordsCount);
-          expect(await shipmentComponentsPage.records.count()).to.eq(beforeRecordsCount);
-        } else {
-          await waitUntilDisplayed(shipmentComponentsPage.noRecords);
-        }
+        await shipmentComponentsPage.clickOnCreateButton();
+
+        await promise.all([
+            shipmentUpdatePage.setTrackingCodeInput('trackingCode'),
+            shipmentUpdatePage.setDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM'),
+            shipmentUpdatePage.setDetailsInput('details'),
+            shipmentUpdatePage.invoiceSelectLastOption(),
+        ]);
+
+        await shipmentUpdatePage.save();
+        expect(await shipmentUpdatePage.getSaveButton().isPresent(), 'Expected save button disappear').to.be.false;
+
+        expect(await shipmentComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1, 'Expected one more entry in the table');
+    }); */
+
+  /* it('should delete last Shipment', async () => {
+        const nbButtonsBeforeDelete = await shipmentComponentsPage.countDeleteButtons();
+        await shipmentComponentsPage.clickOnLastDeleteButton();
+
+        shipmentDeleteDialog = new ShipmentDeleteDialog();
+        expect(await shipmentDeleteDialog.getDialogTitle())
+            .to.eq('storeApp.invoiceShipment.delete.question');
+        await shipmentDeleteDialog.clickOnConfirmButton();
+        await browser.wait(ec.visibilityOf(shipmentComponentsPage.title), 5000);
+
+        expect(await shipmentComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
     }); */
 
   after(async () => {

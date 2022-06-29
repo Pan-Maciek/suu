@@ -9,7 +9,7 @@ application {
     prodDatabaseType mysql,
     cacheProvider hazelcast
     buildTool gradle
-    clientFramework react
+    clientFramework angular
     testFrameworks [protractor]
   }
   entities *
@@ -183,14 +183,14 @@ enum NotificationType {
 
 microservice Notification with notification
 
-// deployment {
-//   deploymentType kubernetes
-//   appsFolders [store, invoice, notification, product]
-//   dockerRepositoryName "jhipster"
-//   serviceDiscoveryType no
-//   istio true
-//   kubernetesServiceType Ingress
-//   kubernetesNamespace jhipster
-//   ingressDomain "35.233.178.72.nip.io"
-// }
-    
+deployment {
+  deploymentType kubernetes
+  appsFolders [store, invoice, notification, product]
+  dockerRepositoryName "jhipster"
+  serviceDiscoveryType no
+  istio true
+  kubernetesServiceType Ingress
+  kubernetesNamespace jhipster
+  ingressType nginx
+  ingressDomain "4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
+}

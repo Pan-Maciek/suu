@@ -1,0 +1,21 @@
+apiVersion: skaffold/v1
+kind: Config
+build:
+  artifacts:
+    - image: jhipster/store
+      context: ../store
+      jib: {}
+    - image: jhipster/invoice
+      context: ../invoice
+      jib: {}
+    - image: jhipster/notification
+      context: ../notification
+      jib: {}
+    - image: jhipster/product
+      context: ../product
+      jib: {}
+  tagPolicy:
+    envTemplate:
+      template: "{{.IMAGE_NAME}}:latest"
+deploy:
+  kustomize: {}

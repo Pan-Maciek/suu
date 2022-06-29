@@ -1,69 +1,173 @@
-import { element, by, ElementFinder, ElementArrayFinder } from 'protractor';
+import { element, by, ElementFinder } from 'protractor';
 
-import { waitUntilAnyDisplayed, waitUntilDisplayed, click, waitUntilHidden, isVisible } from '../../util/utils';
+export class CustomerComponentsPage {
+  createButton = element(by.id('jh-create-entity'));
+  deleteButtons = element.all(by.css('jhi-customer div table .btn-danger'));
+  title = element.all(by.css('jhi-customer div h2#page-heading span')).first();
+  noResult = element(by.id('no-result'));
+  entities = element(by.id('entities'));
 
-import NavBarPage from './../../page-objects/navbar-page';
-
-import CustomerUpdatePage from './customer-update.page-object';
-
-const expect = chai.expect;
-export class CustomerDeleteDialog {
-  deleteModal = element(by.className('modal'));
-  private dialogTitle: ElementFinder = element(by.id('storeApp.customer.delete.question'));
-  private confirmButton = element(by.id('jhi-confirm-delete-customer'));
-
-  getDialogTitle() {
-    return this.dialogTitle;
+  async clickOnCreateButton(): Promise<void> {
+    await this.createButton.click();
   }
 
-  async clickOnConfirmButton() {
-    await this.confirmButton.click();
+  async clickOnLastDeleteButton(): Promise<void> {
+    await this.deleteButtons.last().click();
+  }
+
+  async countDeleteButtons(): Promise<number> {
+    return this.deleteButtons.count();
+  }
+
+  async getTitle(): Promise<string> {
+    return this.title.getAttribute('jhiTranslate');
   }
 }
 
-export default class CustomerComponentsPage {
-  createButton: ElementFinder = element(by.id('jh-create-entity'));
-  deleteButtons = element.all(by.css('div table .btn-danger'));
-  title: ElementFinder = element(by.id('customer-heading'));
-  noRecords: ElementFinder = element(by.css('#app-view-container .table-responsive div.alert.alert-warning'));
-  table: ElementFinder = element(by.css('#app-view-container div.table-responsive > table'));
+export class CustomerUpdatePage {
+  pageTitle = element(by.id('jhi-customer-heading'));
+  saveButton = element(by.id('save-entity'));
+  cancelButton = element(by.id('cancel-save'));
 
-  records: ElementArrayFinder = this.table.all(by.css('tbody tr'));
+  idInput = element(by.id('field_id'));
+  firstNameInput = element(by.id('field_firstName'));
+  lastNameInput = element(by.id('field_lastName'));
+  genderSelect = element(by.id('field_gender'));
+  emailInput = element(by.id('field_email'));
+  phoneInput = element(by.id('field_phone'));
+  addressLine1Input = element(by.id('field_addressLine1'));
+  addressLine2Input = element(by.id('field_addressLine2'));
+  cityInput = element(by.id('field_city'));
+  countryInput = element(by.id('field_country'));
 
-  getDetailsButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-info.btn-sm'));
+  userSelect = element(by.id('field_user'));
+
+  async getPageTitle(): Promise<string> {
+    return this.pageTitle.getAttribute('jhiTranslate');
   }
 
-  getEditButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-primary.btn-sm'));
+  async setIdInput(id: string): Promise<void> {
+    await this.idInput.sendKeys(id);
   }
 
-  getDeleteButton(record: ElementFinder) {
-    return record.element(by.css('a.btn.btn-danger.btn-sm'));
+  async getIdInput(): Promise<string> {
+    return await this.idInput.getAttribute('value');
   }
 
-  async goToPage(navBarPage: NavBarPage) {
-    await navBarPage.getEntityPage('customer');
-    await waitUntilAnyDisplayed([this.noRecords, this.table]);
-    return this;
+  async setFirstNameInput(firstName: string): Promise<void> {
+    await this.firstNameInput.sendKeys(firstName);
   }
 
-  async goToCreateCustomer() {
-    await this.createButton.click();
-    return new CustomerUpdatePage();
+  async getFirstNameInput(): Promise<string> {
+    return await this.firstNameInput.getAttribute('value');
   }
 
-  async deleteCustomer() {
-    const deleteButton = this.getDeleteButton(this.records.last());
-    await click(deleteButton);
+  async setLastNameInput(lastName: string): Promise<void> {
+    await this.lastNameInput.sendKeys(lastName);
+  }
 
-    const customerDeleteDialog = new CustomerDeleteDialog();
-    await waitUntilDisplayed(customerDeleteDialog.deleteModal);
-    expect(await customerDeleteDialog.getDialogTitle().getAttribute('id')).to.match(/storeApp.customer.delete.question/);
-    await customerDeleteDialog.clickOnConfirmButton();
+  async getLastNameInput(): Promise<string> {
+    return await this.lastNameInput.getAttribute('value');
+  }
 
-    await waitUntilHidden(customerDeleteDialog.deleteModal);
+  async setGenderSelect(gender: string): Promise<void> {
+    await this.genderSelect.sendKeys(gender);
+  }
 
-    expect(await isVisible(customerDeleteDialog.deleteModal)).to.be.false;
+  async getGenderSelect(): Promise<string> {
+    return await this.genderSelect.element(by.css('option:checked')).getText();
+  }
+
+  async genderSelectLastOption(): Promise<void> {
+    await this.genderSelect.all(by.tagName('option')).last().click();
+  }
+
+  async setEmailInput(email: string): Promise<void> {
+    await this.emailInput.sendKeys(email);
+  }
+
+  async getEmailInput(): Promise<string> {
+    return await this.emailInput.getAttribute('value');
+  }
+
+  async setPhoneInput(phone: string): Promise<void> {
+    await this.phoneInput.sendKeys(phone);
+  }
+
+  async getPhoneInput(): Promise<string> {
+    return await this.phoneInput.getAttribute('value');
+  }
+
+  async setAddressLine1Input(addressLine1: string): Promise<void> {
+    await this.addressLine1Input.sendKeys(addressLine1);
+  }
+
+  async getAddressLine1Input(): Promise<string> {
+    return await this.addressLine1Input.getAttribute('value');
+  }
+
+  async setAddressLine2Input(addressLine2: string): Promise<void> {
+    await this.addressLine2Input.sendKeys(addressLine2);
+  }
+
+  async getAddressLine2Input(): Promise<string> {
+    return await this.addressLine2Input.getAttribute('value');
+  }
+
+  async setCityInput(city: string): Promise<void> {
+    await this.cityInput.sendKeys(city);
+  }
+
+  async getCityInput(): Promise<string> {
+    return await this.cityInput.getAttribute('value');
+  }
+
+  async setCountryInput(country: string): Promise<void> {
+    await this.countryInput.sendKeys(country);
+  }
+
+  async getCountryInput(): Promise<string> {
+    return await this.countryInput.getAttribute('value');
+  }
+
+  async userSelectLastOption(): Promise<void> {
+    await this.userSelect.all(by.tagName('option')).last().click();
+  }
+
+  async userSelectOption(option: string): Promise<void> {
+    await this.userSelect.sendKeys(option);
+  }
+
+  getUserSelect(): ElementFinder {
+    return this.userSelect;
+  }
+
+  async getUserSelectedOption(): Promise<string> {
+    return await this.userSelect.element(by.css('option:checked')).getText();
+  }
+
+  async save(): Promise<void> {
+    await this.saveButton.click();
+  }
+
+  async cancel(): Promise<void> {
+    await this.cancelButton.click();
+  }
+
+  getSaveButton(): ElementFinder {
+    return this.saveButton;
+  }
+}
+
+export class CustomerDeleteDialog {
+  private dialogTitle = element(by.id('jhi-delete-customer-heading'));
+  private confirmButton = element(by.id('jhi-confirm-delete-customer'));
+
+  async getDialogTitle(): Promise<string> {
+    return this.dialogTitle.getAttribute('jhiTranslate');
+  }
+
+  async clickOnConfirmButton(): Promise<void> {
+    await this.confirmButton.click();
   }
 }

@@ -1,18 +1,7 @@
-import { browser, element, by } from 'protractor';
+import { browser, ExpectedConditions as ec, protractor, promise } from 'protractor';
+import { NavBarPage, SignInPage } from '../../../page-objects/jhi-page-objects';
 
-import NavBarPage from './../../../page-objects/navbar-page';
-import SignInPage from './../../../page-objects/signin-page';
-import NotificationComponentsPage from './notification.page-object';
-import NotificationUpdatePage from './notification-update.page-object';
-import {
-  waitUntilDisplayed,
-  waitUntilAnyDisplayed,
-  click,
-  getRecordsCount,
-  waitUntilHidden,
-  waitUntilCount,
-  isVisible,
-} from '../../../util/utils';
+import { NotificationComponentsPage, NotificationDeleteDialog, NotificationUpdatePage } from './notification.page-object';
 
 const expect = chai.expect;
 
@@ -21,6 +10,7 @@ describe('Notification e2e test', () => {
   let signInPage: SignInPage;
   let notificationComponentsPage: NotificationComponentsPage;
   let notificationUpdatePage: NotificationUpdatePage;
+  let notificationDeleteDialog: NotificationDeleteDialog;
   const username = process.env.E2E_USERNAME ?? 'admin';
   const password = process.env.E2E_PASSWORD ?? 'admin';
 
@@ -28,48 +18,58 @@ describe('Notification e2e test', () => {
     await browser.get('/');
     navBarPage = new NavBarPage();
     signInPage = await navBarPage.getSignInPage();
-    await signInPage.waitUntilDisplayed();
-    await signInPage.username.sendKeys(username);
-    await signInPage.password.sendKeys(password);
-    await signInPage.loginButton.click();
-    await signInPage.waitUntilHidden();
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    await waitUntilDisplayed(navBarPage.adminMenu);
-    await waitUntilDisplayed(navBarPage.accountMenu);
-  });
-
-  beforeEach(async () => {
-    await browser.get('/');
-    await waitUntilDisplayed(navBarPage.entityMenu);
-    notificationComponentsPage = new NotificationComponentsPage();
-    notificationComponentsPage = await notificationComponentsPage.goToPage(navBarPage);
+    await signInPage.autoSignInUsing(username, password);
+    await browser.wait(ec.visibilityOf(navBarPage.entityMenu), 5000);
   });
 
   it('should load Notifications', async () => {
-    expect(await notificationComponentsPage.title.getText()).to.match(/Notifications/);
-    expect(await notificationComponentsPage.createButton.isEnabled()).to.be.true;
+    await navBarPage.goToEntity('notification');
+    notificationComponentsPage = new NotificationComponentsPage();
+    await browser.wait(ec.visibilityOf(notificationComponentsPage.title), 5000);
+    expect(await notificationComponentsPage.getTitle()).to.eq('storeApp.notificationNotification.home.title');
+    await browser.wait(
+      ec.or(ec.visibilityOf(notificationComponentsPage.entities), ec.visibilityOf(notificationComponentsPage.noResult)),
+      1000
+    );
   });
 
-  it('should create and delete Notifications', async () => {
-    const beforeRecordsCount = (await isVisible(notificationComponentsPage.noRecords))
-      ? 0
-      : await getRecordsCount(notificationComponentsPage.table);
-    notificationUpdatePage = await notificationComponentsPage.goToCreateNotification();
-    await notificationUpdatePage.enterData();
-    expect(await isVisible(notificationUpdatePage.saveButton)).to.be.false;
+  it('should load create Notification page', async () => {
+    await notificationComponentsPage.clickOnCreateButton();
+    notificationUpdatePage = new NotificationUpdatePage();
+    expect(await notificationUpdatePage.getPageTitle()).to.eq('storeApp.notificationNotification.home.createOrEditLabel');
+    await notificationUpdatePage.cancel();
+  });
 
-    expect(await notificationComponentsPage.createButton.isEnabled()).to.be.true;
-    await waitUntilDisplayed(notificationComponentsPage.table);
-    await waitUntilCount(notificationComponentsPage.records, beforeRecordsCount + 1);
-    expect(await notificationComponentsPage.records.count()).to.eq(beforeRecordsCount + 1);
+  it('should create and save Notifications', async () => {
+    const nbButtonsBeforeCreate = await notificationComponentsPage.countDeleteButtons();
 
-    await notificationComponentsPage.deleteNotification();
-    if (beforeRecordsCount !== 0) {
-      await waitUntilCount(notificationComponentsPage.records, beforeRecordsCount);
-      expect(await notificationComponentsPage.records.count()).to.eq(beforeRecordsCount);
-    } else {
-      await waitUntilDisplayed(notificationComponentsPage.noRecords);
-    }
+    await notificationComponentsPage.clickOnCreateButton();
+
+    await promise.all([
+      notificationUpdatePage.setDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM'),
+      notificationUpdatePage.setDetailsInput('details'),
+      notificationUpdatePage.setSentDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM'),
+      notificationUpdatePage.formatSelectLastOption(),
+      notificationUpdatePage.setUserIdInput('5'),
+      notificationUpdatePage.setProductIdInput('5'),
+    ]);
+
+    await notificationUpdatePage.save();
+    expect(await notificationUpdatePage.getSaveButton().isPresent(), 'Expected save button disappear').to.be.false;
+
+    expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1, 'Expected one more entry in the table');
+  });
+
+  it('should delete last Notification', async () => {
+    const nbButtonsBeforeDelete = await notificationComponentsPage.countDeleteButtons();
+    await notificationComponentsPage.clickOnLastDeleteButton();
+
+    notificationDeleteDialog = new NotificationDeleteDialog();
+    expect(await notificationDeleteDialog.getDialogTitle()).to.eq('storeApp.notificationNotification.delete.question');
+    await notificationDeleteDialog.clickOnConfirmButton();
+    await browser.wait(ec.visibilityOf(notificationComponentsPage.title), 5000);
+
+    expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
   });
 
   after(async () => {

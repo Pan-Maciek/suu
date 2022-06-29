@@ -1,1 +1,17 @@
 jhipster import-jdl .\jhipster-jdl.jdl
+
+
+Dodać gotowy skrypt jak to zrobic
+nie trzeba jakiejs dosadnej dokumentacji
+
+Metryki:
+- springowe flagi //actuator//
+- il. requestow na danej sciezce
+- jakie wykorzystanie heapa itp
+- jvm stats
+- stan buforu //opcjonalnie
+- NIO JAVA SPRING //ocjonalnie
+- 
+
+NIE:
+- nie systemowe rzeczy typu CPU, RAM
