@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: invoice-virtualservice
-  namespace: jhipster
+  namespace: skupien
 spec:
   hosts:
     - invoice

@@ -186,11 +186,11 @@ microservice Notification with notification
 deployment {
   deploymentType kubernetes
   appsFolders [store, invoice, notification, product]
-  dockerRepositoryName "jhipster"
+  dockerRepositoryName "skupien"
   serviceDiscoveryType no
   istio true
   kubernetesServiceType Ingress
-  kubernetesNamespace jhipster
+  kubernetesNamespace skupien
   ingressType nginx
   ingressDomain "4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
 }

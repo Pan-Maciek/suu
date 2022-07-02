@@ -1,6 +1,6 @@
 {
   "applications": ["store", "notification"],
-  "changelogDate": "20220629200433",
+  "changelogDate": "20220702151403",
   "clientRootFolder": "notification",
   "databaseType": "mongodb",
   "dto": "no",

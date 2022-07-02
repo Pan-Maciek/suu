@@ -5,7 +5,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: store-gateway
-  namespace: jhipster
+  namespace: skupien
   labels:
     gateway: store-gateway
     istio: ingressgateway
@@ -18,24 +18,24 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - store.jhipster.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
+        - store.skupien.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
     - port:
         number: 80
         name: http2
         protocol: HTTP2
       hosts:
-        - store.jhipster.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
+        - store.skupien.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: store-gw-virtualservice
-  namespace: jhipster
+  namespace: skupien
   labels:
     service: store-gw-virtualservice
 spec:
   hosts:
-    - store.jhipster.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
+    - store.skupien.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com
   gateways:
     - store-gateway
   http:

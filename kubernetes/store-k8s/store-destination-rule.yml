@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: store-destinationrule
-  namespace: jhipster
+  namespace: skupien
 spec:
   host: store
   trafficPolicy:

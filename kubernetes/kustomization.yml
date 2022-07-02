@@ -1,7 +1,7 @@
 commonLabels:
   app.kubernetes.io/genereted-by: JHipster
 
-namespace: jhipster
+namespace: skupien
 
 resources:
   - namespace.yml
@@ -40,47 +40,47 @@ patchesJson6902:
   - target:
       version: v1
       kind: Namespace
-      name: jhipster
+      name: skupien
     path: patch-k8s/istio-label.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       kind: Gateway
       name: grafana-observability-gateway
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       name: grafana-gw-virtualservice
       kind: VirtualService
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       kind: Gateway
       name: kiali-observability-gateway
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       name: kiali-gw-virtualservice
       kind: VirtualService
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       kind: Gateway
       name: zipkin-observability-gateway
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml
   - target:
       group: networking.istio.io
       version: v1alpha3
       name: zipkin-gw-virtualservice
       kind: VirtualService
-      namespace: jhipster
+      namespace: skupien
     path: patch-k8s/istio-namespace.yml

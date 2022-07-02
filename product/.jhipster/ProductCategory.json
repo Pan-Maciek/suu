@@ -1,6 +1,6 @@
 {
   "applications": ["store", "product"],
-  "changelogDate": "20220629200633",
+  "changelogDate": "20220702151603",
   "clientRootFolder": "product",
   "databaseType": "sql",
   "dto": "no",

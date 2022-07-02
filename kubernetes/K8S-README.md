@@ -5,14 +5,14 @@
 You will need to push your image to a registry. If you have not done so, use the following commands to tag and push the images:
 
 ```
-$ docker image tag store jhipster/store
-$ docker push jhipster/store
-$ docker image tag invoice jhipster/invoice
-$ docker push jhipster/invoice
-$ docker image tag notification jhipster/notification
-$ docker push jhipster/notification
-$ docker image tag product jhipster/product
-$ docker push jhipster/product
+$ docker image tag store skupien/store
+$ docker push skupien/store
+$ docker image tag invoice skupien/invoice
+$ docker push skupien/invoice
+$ docker image tag notification skupien/notification
+$ docker push skupien/notification
+$ docker image tag product skupien/product
+$ docker push skupien/product
 ```
 
 ## Deployment
@@ -40,7 +40,7 @@ skaffold run [or] skaffold deploy
 Use these commands to find your application's IP addresses:
 
 ```
-$ kubectl get svc store -n jhipster
+$ kubectl get svc store -n skupien
 ```
 
 ## Scaling your deployments
@@ -48,7 +48,7 @@ $ kubectl get svc store -n jhipster
 You can scale your apps using
 
 ```
-$ kubectl scale deployment <app-name> --replicas <replica-count> -n jhipster
+$ kubectl scale deployment <app-name> --replicas <replica-count> -n skupien
 ```
 
 ## zero-downtime deployments
@@ -56,7 +56,7 @@ $ kubectl scale deployment <app-name> --replicas <replica-count> -n jhipster
 The default way to update a running app in kubernetes, is to deploy a new image tag to your docker registry and then deploy it using
 
 ```
-$ kubectl set image deployment/<app-name>-app <app-name>=<new-image>  -n jhipster
+$ kubectl set image deployment/<app-name>-app <app-name>=<new-image>  -n skupien
 ```
 
 Using livenessProbes and readinessProbe allow you to tell Kubernetes about the state of your applications, in order to ensure availablity of your services. You will need minimum 2 replicas for every application deployment if you want to have zero-downtime deployed.

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: product
-  namespace: jhipster
+  namespace: skupien
   labels:
     app: product
 spec:

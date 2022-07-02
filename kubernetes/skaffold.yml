@@ -2,16 +2,16 @@ apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
-    - image: jhipster/store
+    - image: skupien/store
       context: ../store
       jib: {}
-    - image: jhipster/invoice
+    - image: skupien/invoice
       context: ../invoice
       jib: {}
-    - image: jhipster/notification
+    - image: skupien/notification
       context: ../notification
       jib: {}
-    - image: jhipster/product
+    - image: skupien/product
       context: ../product
       jib: {}
   tagPolicy:

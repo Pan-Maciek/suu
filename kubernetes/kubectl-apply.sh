@@ -22,7 +22,7 @@ logSummary() {
     echo ""
         echo "#####################################################"
         echo "Please find the below useful endpoints,"
-        echo "Gateway - http://store.jhipster.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
+        echo "Gateway - http://store.skupien.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
         echo "Zipkin - http://zipkin.istio-system.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
         echo "Grafana - http://grafana.istio-system.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
         echo "Kiali - http://kiali.istio-system.4b134d7f36f4df77defb76df459d1854.gr7.us-east-1.eks.amazonaws.com"
@@ -32,7 +32,7 @@ logSummary() {
 default() {
     suffix=k8s
     kubectl apply -f namespace.yml
-    kubectl label namespace jhipster istio-injection=enabled --overwrite=true
+    kubectl label namespace skupien istio-injection=enabled --overwrite=true
     kubectl apply -f store-${suffix}/
     kubectl apply -f invoice-${suffix}/
     kubectl apply -f notification-${suffix}/
